@@ -139,7 +139,6 @@ const handleSend = async (downloadURL) => {
         automatically be sent to the requesting organization upon sucessful upload</i></p>
     
       <input
-      
       type = 'file'
       onChange = {(e) => {setFile(e.target.files[0])}}
       />

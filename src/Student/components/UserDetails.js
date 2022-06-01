@@ -69,6 +69,7 @@ export const UserDetails = (props) => {
     const handlePersonalShow = () => setPersonalShow(true);
     const [user, loading, error] = useAuthState(auth);
     const [userDoc, setUserDoc] = useState("");
+    const [resume, setResume] = useState("None Provided")
 
     useEffect(() => {
         async function checkStatement() {
@@ -113,13 +114,19 @@ export const UserDetails = (props) => {
         <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Number of Orgs: </b></p></div>
         <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Number of LORs: </b> </p></div>
         <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Personal Statement: </b> {props.statement}</p></div>
-        <Button onClick={handlePersonalShow}>
+        <Button style = {{marginLeft: 50, width: 200, backgroundColor: 'black'}} onClick={handlePersonalShow}>
             Add Personal Statement
         </Button>
 
-        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Resume: </b></p></div>
+        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Resume: </b> {resume}</p></div>
+        <input
+        style = {{marginLeft: 50, marginBottom: 15}}
+        type = 'file'
+        onChange = {(e) => {setResume(e.target.files[0])}}
+        />
+        <Button style = {{marginLeft: 50, width: 200, backgroundColor: 'black'}}>Upload</Button>
         </div>
-
+        
         <div style = {{display : 'flex', flexDirection: 'row'}}> 
         <button style = {userStyle.button} onClick={() => logout()}>
         Logout</button></div>
