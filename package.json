@@ -19,7 +19,7 @@
     "react-scripts": "5.0.1",
     "save-dev": "^0.0.1-security",
     "web-vitals": "^2.1.4",
-    "homepage": "http://rari459.github.io/RecMeApp"
+    "homepage": "https://rari459.github.io/RecMeApp/"
   },
   "scripts": {
     "start": "react-scripts start",
