@@ -47,7 +47,7 @@ export const Home = () => {
     <div style = {homeStyle.container}>
     <div style = {homeStyle.welcome}>
         <div style = {homeStyle.mainText}>
-        <p>Meet <b>RecMe</b>, a new way <br></br> to send, store, and receive <br></br>
+        <p>Meet <b>RecMe App</b>, a new way <br></br> to send, store, and receive <br></br>
         letters of recommendation. <br></br> 
         {/*Secure, automated, and convenient,*/} </p>
 
