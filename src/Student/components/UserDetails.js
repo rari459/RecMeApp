@@ -1,4 +1,4 @@
-import { auth, db, logout } from "../../firebase";
+import { auth, db, logout, storage } from "../../firebase";
 import {Modal, Button} from 'react-bootstrap';
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";

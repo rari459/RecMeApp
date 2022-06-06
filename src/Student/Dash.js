@@ -75,6 +75,9 @@ const orgAdd = async (e) => {
     })
     handlePersonalClose()
     handleCount()
+    setOrgName("")
+    setOrgEmail("")
+    setDeadline("")
   } catch (err) {
     alert(err)
   }
