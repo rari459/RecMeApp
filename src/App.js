@@ -10,6 +10,7 @@ import {Profile} from './Student/Profile'
 import {PasswordReset} from  './Student/auth/PasswordReset'
 import { RecLoginPortal } from './Recommender/RecLoginPortal';
 import { RecDash } from './Recommender/RecDash';
+import { Saved } from './Student/Saved';
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dash />} />
+        <Route path="/saved" element={<Saved />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard/lor" element={<SpecificLOR />} />

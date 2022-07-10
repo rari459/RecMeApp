@@ -6,8 +6,10 @@ import {useEffect, useState} from 'react'
 import {collection, addDoc, doc, deleteDoc,} from "firebase/firestore"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db, storage } from "../../firebase";
-import { getLorData } from '../models/Org_Lors';
+import { getLorData, getSaveData, getSaveDatabyDocID } from '../models/Org_Lors';
 import { deleteObject, ref } from 'firebase/storage';
+import { getUserData } from '../models/User';
+import emailjs from '@emailjs/browser';
 
 const dashCardStyles = {
     container : {
@@ -51,12 +53,19 @@ export const DashCard = (props) => {
     const handlePersonalClose = () => setPersonalShow(false);
     const handlePersonalShow = () => setPersonalShow(true);
     const [user, loading, error] = useAuthState(auth);
+    const [userData, setUserData] = useState({})
     const [lorData, setLorData] = useState();
     const [updateLor, setUpdateLor] = useState(0);
     const [deleteModal, setDeleteModal] = useState(false);
     const handleDeleteClose = () => setDeleteModal(false);
     const handleDeleteShow = () => setDeleteModal(true);
     const [total, setTotal] = useState(0)
+    const [savePickModal, setsavePickModal] = useState(false);
+    const handleSaveClose = () => {setsavePickModal(false); setChecked([])};
+    const handleSaveShow = () => {handlePersonalClose(); setsavePickModal(true)};
+    const [savedList, setSavedList] = useState();
+    const [checked, setChecked] = useState([]);
+    
 
     const lorAdd = async (e) => {
       e.preventDefault()
@@ -80,6 +89,10 @@ export const DashCard = (props) => {
       async function checkUserExists() {
         if (user){
           const lors = await getLorData(user.uid, props.org);
+          const saved = await getSaveData(user.uid);
+          const userDetails = await getUserData(user.uid)
+          setUserData(userDetails)
+          setSavedList(saved);
           if (lors.length) {
             setLorData(lors)
           }
@@ -90,7 +103,6 @@ export const DashCard = (props) => {
         
         }
       }
-  
       checkUserExists();
     }, [user, updateLor]);
 
@@ -106,8 +118,62 @@ export const DashCard = (props) => {
       await deleteDoc(doc(db, 'org', props.orgdocID))
       handleDeleteClose()
       props.handler()
+    }
+
+    const handleCheck = (event) => {
+      var updatedList = [...checked];
+      if (event.target.checked) {
+        updatedList = [...checked, event.target.value];
+      } else {
+        updatedList.splice(checked.indexOf(event.target.value), 1);
+      }
+      setChecked(updatedList);
+    };
+
+    const sendSave = async(e) => {
+      e.preventDefault()
+      checked?.map((data, index) => {
+        getSaveDatabyDocID(data).then((data) => {
+          try {
+            addDoc(collection(db, 'lors'), {
+              uid: user.uid,
+              orgName: props.org,
+              orgEmail: props.orgEmail,
+              recName: data.recName,
+              recEmail: data.recEmail,
+              status: "Complete",
+              lorURL: data.downloadURL
+            }).then(()=> setUpdateLor(updateLor+1)).then(() => {
+              const details = {
+                userName: userData.name,
+                userEmail: userData.email,
+                recName: data.recName,
+                recEmail: data.recEmail,
+                orgName: props.orgName,
+                orgEmail: props.orgEmail,
+                lorURL: data.downloadURL
+                }
+
+                emailjs.send("service_f56wfq5","template_cngkffi", 
+                details,
+                "PwdejfwUZQz_8PZLq");
+            }
+            )
+            
+          } catch (err) {
+            alert(err)
+          }
+        });
+
+        
+        
+      })
+
+      handleSaveClose()
+    
   }
 
+  //console.log(checked)
   return (
       <>
       <div style = {dashCardStyles.container}>
@@ -210,6 +276,10 @@ export const DashCard = (props) => {
           <Button variant="secondary" onClick={handlePersonalClose}>
             Close
           </Button>
+          <Button variant="primary" onClick={handleSaveShow} 
+          style = {{backgroundColor: '#00A570', color : 'white', border: 'none'}}>
+            Use Saved Letter
+          </Button>
           <Button variant="primary" onClick={lorAdd} 
           style = {{backgroundColor: '#A50035', color : 'white', border: 'none'}}>
             Add Letter
@@ -235,6 +305,43 @@ export const DashCard = (props) => {
           <Button variant="primary" onClick={deleteOrg} 
           style = {{backgroundColor: '#A50035', color : 'white', border: 'none'}}>
             Delete Organization
+          </Button>
+        </Modal.Footer>
+        </Modal>
+
+        <Modal 
+        centered = {true}
+        show={savePickModal} 
+        onHide={handleSaveClose} 
+        >
+        <Modal.Header closeButton>
+          <Modal.Title>Chose Saved LOR</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+              {savedList?.map((data, index) => {
+                return (
+                  <>
+                  <div key = {index}>  
+                    <input
+                      type = 'checkbox'
+                      style = {{marginRight: 20}}
+                      value = {data.docID}
+                      onChange={handleCheck}
+                      >
+                    </input>
+                      {data.docID}
+                  </div>
+                  </>
+                )
+              })}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleSaveClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={sendSave} 
+          style = {{backgroundColor: '#A50035', color : 'white', border: 'none'}}>
+            Send To Organization
           </Button>
         </Modal.Footer>
         </Modal>

@@ -3,7 +3,6 @@ import { NavBar } from './components/NavBar';
 import { auth, logout } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import {useNavigate} from 'react-router-dom';
-import { getUserData, getuserDoc } from './models/User';
 import { UserDetails } from './components/UserDetails';
 
 
@@ -44,32 +43,16 @@ const loginStyle = {
  
 export const Profile = () => {
   const [user, loading, error] = useAuthState(auth);
-  const [userData, setUserData] = useState({ authProvider: "", name: "", email: "", uid : "", statement: ""});
-  const [userDoc, setUserDoc] = useState();
+
   const navigate = useNavigate();
 
-  
-
-  useEffect(() => {
-    async function checkUserExists() {
-      if (user.uid) {
-        const result = await getUserData(user.uid);
-        const userDoc = await getuserDoc(user.uid);
-        setUserData(result);
-        setUserDoc(userDoc);
-      } else {
-        console.log('error')
-      }
-    }
-    checkUserExists();
-  }, [user]);
 
 
   return(
     
     <>
     <NavBar/>
-    {user && <UserDetails {...userData}/>}
+    {user && <UserDetails/>}
     
     {!user && <div>
     <div style = {loginStyle.container}>

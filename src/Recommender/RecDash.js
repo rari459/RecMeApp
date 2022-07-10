@@ -71,7 +71,7 @@ export const RecDash = () => {
       const storageRef = ref(storage, `/lors/${params.docID}`)
       const uploadTask = uploadBytesResumable(storageRef, file)
 
-      uploadTask.on('state_changed', 
+  uploadTask.on('state_changed', 
   (snapshot) => {
     // Observe state change events such as progress, pause, and resume
     // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
@@ -97,6 +97,7 @@ export const RecDash = () => {
     setShow(true)
   }
 );
+};
 
 const handleSend = async (downloadURL) => {
     
@@ -112,7 +113,8 @@ const handleSend = async (downloadURL) => {
       const lorDocRef = doc(db, 'lors', params.docID)
     try{
       await updateDoc(lorDocRef, {
-        status: "Completed"
+        status: "Completed",
+        url: downloadURL
       })
     } catch (err) {
       console.log(err)
@@ -127,7 +129,7 @@ const handleSend = async (downloadURL) => {
 
 
 
-  }
+  
 
   return(
     <>

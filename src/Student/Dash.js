@@ -10,6 +10,9 @@ import { Button, Modal } from 'react-bootstrap';
 import {collection, addDoc,} from "firebase/firestore"
 import { getOrgData } from "./models/Org_Lors";
 import {useNavigate} from 'react-router-dom';
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
 
 const dashStyle = {
     container : {
@@ -52,7 +55,7 @@ const [userData, setUserData] = useState({ authProvider: "", name: "", email: ""
 const [user, loading, error] = useAuthState(auth);
 const [orgName, setOrgName] = useState("");
 const [orgEmail, setOrgEmail] = useState("");
-const [deadline, setDeadline] = useState("");
+const [deadline, setDeadline] = useState(new Date());
 const [personalShow, setPersonalShow] = useState(false);
 const handlePersonalClose = () => setPersonalShow(false);
 const handlePersonalShow = () => setPersonalShow(true);
@@ -97,6 +100,7 @@ useEffect(() => {
 
     checkUserExists();
   }, [user, count]);
+  
 
 
 
@@ -125,10 +129,14 @@ useEffect(() => {
         </div>
 
         {orgData?.map((data, index) => {
+          //let date = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(data.deadline)
+          let s = new Date(data.deadline.seconds*1000).toLocaleDateString("en-US")
+          console.log(s)
                 return (
-                <DashCard key = {index} org = {data.name} deadline = {data.deadline} 
+                <DashCard key = {index} org = {data.name} 
                 sent = {data.sent} completed = {data.completed} orgEmail = {data.email} 
-                orgdocID = {data.orgDocID} status = {data.status} handler = {handleCount}/>
+                orgdocID = {data.orgDocID} status = {data.status} handler = {handleCount} deadline = {s}/>
+
                 )
         })}
         </div>
@@ -160,12 +168,8 @@ useEffect(() => {
             style = {{width : '100%', padding: 10, marginTop: 10, marginBottom: 10}}/>
 
             Deadline
-            <input
-            type = 'text'
-            value = {deadline}
-            onChange={(e) => setDeadline(e.target.value)}
-            placeholder= "mm/dd/yyyy"
-            style = {{width : '100%', padding: 10, marginTop: 10, marginBottom: 10}}/>
+            <DatePicker selected={deadline} onChange={(date) => setDeadline(date)} />
+            
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handlePersonalClose}>

@@ -5,7 +5,8 @@ import { Navbar, Container, Nav, NavDropdown } from "react-bootstrap"
 const navStyles = {
     container: {
       height: 60,
-      backgroundColor: 'black'
+      backgroundColor: 'black',
+      width: '100%'
     }, 
     logo : {
         fontSize: 25,
@@ -40,7 +41,7 @@ export const NavBar = () => {
         
         <Nav.Link style = {navStyles.link} href="\">Home</Nav.Link>
         <Nav.Link style = {navStyles.link} href="\dashboard">Dashboard</Nav.Link>
-        <Nav.Link style = {navStyles.link} href="#saved">Saved</Nav.Link>
+        <Nav.Link style = {navStyles.link} href="\saved">Saved</Nav.Link>
         <Nav.Link style = {navStyles.link} href="\profile">Profile</Nav.Link>
       </Nav>
   </Container>

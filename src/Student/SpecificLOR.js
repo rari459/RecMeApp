@@ -2,14 +2,14 @@ import {NavBar} from "./components/NavBar"
 import { useLocation, useNavigate } from "react-router-dom";
 import {useEffect, useState} from 'react'
 import { Button, Modal } from "react-bootstrap";
-import {updateDoc, doc, deleteDoc} from "firebase/firestore"
+import {updateDoc, doc, deleteDoc, addDoc, collection, DocumentReference, setDoc} from "firebase/firestore"
 import { auth, db, storage } from "../firebase";
-import { getlorDatabyDocID } from "./models/Org_Lors";
+import { getlorDatabyDocID, swapFiles } from "./models/Org_Lors";
 import { useAuthState } from "react-firebase-hooks/auth";
 import emailjs from '@emailjs/browser';
 import { getUserData } from './models/User';
 import {FaTrashAlt } from 'react-icons/fa'
-import { ref, deleteObject } from "firebase/storage";
+import { ref, deleteObject, getDownloadURL } from "firebase/storage";
 
 const LORStyle = {
     container : {
@@ -65,18 +65,24 @@ const handleSendShow = () => setsendModal(true);
 const [deleteModal, setDeleteModal] = useState(false);
 const handleDeleteClose = () => setDeleteModal(false);
 const handleDeleteShow = () => setDeleteModal(true);
+const [saveModal, setSaveModal] = useState(false);
+const handleSaveClose = () => setSaveModal(false);
+const handleSaveShow = () => setSaveModal(true);
 const [recName, setRecName] = useState("");
 const [recEmail, setRecEmail] = useState("");
 const [updateLor, setUpdateLor] = useState(0);
 const [user, loading, error] = useAuthState(auth);
-const [userData, setUserData] = useState({ authProvider: "", name: "", email: "", uid : ""});
+const [userData, setUserData] = useState();
 const location = useLocation();
 const data = location.state;
 const [description, setDescription] = useState({});
 const [greeting, setGreeting] = useState("");
 const [body, setBody] = useState("");
 const [farewell, setFarewell] = useState("");
-const navigate = useNavigate()
+const [lorURL, setURL] = useState("");
+const [saveName, setSaveName] = useState("");
+const [resume, setResume] = useState("None Provided");
+const navigate = useNavigate();
 
 useEffect(() => {
     async function checkUserExists() {
@@ -84,6 +90,9 @@ useEffect(() => {
         const lors = await getlorDatabyDocID(data.docID);
         const udata = await getUserData(user.uid);
         setUserData(udata);
+        if (udata.resume){
+          setResume(udata.resume)
+        }
         if (lors) {
             setRecEmail(lors.recEmail);
             setRecName(lors.recName);
@@ -92,6 +101,9 @@ useEffect(() => {
                 setGreeting(description.greeting)
                 setBody(description.body)
                 setFarewell(description.farewell)
+            }
+            if (lors.url){
+              setURL(lors.url)
             }
         }
 
@@ -133,7 +145,8 @@ const handleUpdate = async (e) => {
       uid: data.docID,
       reply_to: userData.email,
       userName: userData.name,
-      userEmail: userData.email
+      userEmail: userData.email,
+      resume: resume
       }
       
 
@@ -162,7 +175,30 @@ const handleUpdate = async (e) => {
       handleDeleteClose()
       navigate('/dashboard')
   }
-  
+
+    const savedAdd = async () => {
+      try {
+        swapFiles(`/lors/${data.docID}`, `/saved/${user.uid + saveName}`).then(() => {
+          const savedRef = ref(storage, `/saved/${user.uid + saveName}`);
+          getDownloadURL(savedRef).then((url) => {
+            setDoc(doc(db, "saved", saveName), { 
+              uid: user.uid,
+              recName: recName,
+              recEmail: recEmail,
+              downloadURL: url
+            })
+          })
+        })
+        
+      } catch (err) {
+        alert(err)
+      }
+
+      handleSaveClose()
+    }
+
+    console.log(userData)
+
   return (
     <>
     <NavBar/>
@@ -194,10 +230,13 @@ const handleUpdate = async (e) => {
                 </div>}
             </div>
             <div style = {{display: 'flex', flexDirection: 'row', justifyItems: 'center', marginTop: 20}}>
-                <p style = {{paddingRight: 20}}><b>Resume: </b> </p>
+                <p style = {{paddingRight: 20}}><b>Resume: </b> {resume} </p>
             </div>
         </div>  
         <div style = {{display: 'flex', flexDirection: 'row', alignSelf: 'flex-end', marginRight: 50}}>
+            <Button onClick={handleSaveShow} style = {LORStyle.button}>
+                  <p> <b><i>Save Letter</i></b></p>
+            </Button>
             <Button onClick={handlePersonalShow} style = {LORStyle.button}>
                   <p> <b><i>Edit Letter</i></b></p>
             </Button>
@@ -208,6 +247,56 @@ const handleUpdate = async (e) => {
         
         </div>
     </div>
+
+    <Modal 
+        centered = {true}
+        show={saveModal} 
+        onHide={handleSaveClose} 
+        >
+        <Modal.Header closeButton>
+          <Modal.Title>Save LOR</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Specify Name for Saved LOR:
+          <input 
+            type = 'text'
+            value = {saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            placeholder= 'Enter Unique Save Name'
+            style = {{width : '100%', padding: 10, marginBottom: 20}}/>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleSaveClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={savedAdd} 
+          style = {{backgroundColor: '#A50035', color : 'white', border: 'none'}}>
+            Save Letter
+          </Button>
+        </Modal.Footer>
+        </Modal>
+
+        <Modal 
+        centered = {true}
+        show={deleteModal} 
+        onHide={handleDeleteClose} 
+        >
+        <Modal.Header closeButton>
+          <Modal.Title>Delete LOR</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleDeleteClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={deleteLOR} 
+          style = {{backgroundColor: '#A50035', color : 'white', border: 'none'}}>
+            Delete Letter
+          </Button>
+        </Modal.Footer>
+        </Modal>
 
     <Modal 
         centered = {true}
@@ -252,7 +341,6 @@ const handleUpdate = async (e) => {
             onChange={(e) => setFarewell(e.target.value)}
             placeholder= 'Enter Closing'
             style = {{width : '100%', padding: 10, marginBottom: 20}}/>
-            
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handlePersonalClose}>

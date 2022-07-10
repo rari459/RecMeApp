@@ -3,7 +3,8 @@ import {Modal, Button} from 'react-bootstrap';
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import {updateDoc, doc} from "firebase/firestore"
-import { getuserDoc} from "../models/User";
+import { getUserData, getuserDoc} from "../models/User";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 
 
 const userStyle = {
@@ -62,41 +63,89 @@ const userStyle = {
 
 }
 
-export const UserDetails = (props) => {
+export const UserDetails = () => {
     const [statement, setStatement] = useState("");
     const [personalShow, setPersonalShow] = useState(false);
     const handlePersonalClose = () => setPersonalShow(false);
     const handlePersonalShow = () => setPersonalShow(true);
     const [user, loading, error] = useAuthState(auth);
     const [userDoc, setUserDoc] = useState("");
-    const [resume, setResume] = useState("None Provided")
+    const [resume, setResume] = useState("")
+    const [userData, setUserData] = useState({});
+    const [update, setUpdate] = useState(0)
 
     useEffect(() => {
         async function checkStatement() {
-          const userDoc = await getuserDoc(user.uid);
           if (user.uid) {
+            const result = await getUserData(user.uid)
+            const userDoc = await getuserDoc(user.uid);
             setUserDoc(userDoc);
+            setUserData(result)
           } else {
             console.log('error')
           }
         }
         checkStatement();
-      }, [user, props]);
+      }, [user, update]);
     
-      const handleUpdate = async (e) => {
-        e.preventDefault()
+      const handleUpdate = async (downloadURL) => {
         const taskDocRef = doc(db, 'users', userDoc)
-        
+        try{
+          await updateDoc(taskDocRef, {
+            resume: downloadURL
+          })
+          handlePersonalClose()
+          setUpdate(update+1)
+        } catch (err) {
+          alert(err)
+        }    
+      }
+      
+      const handleStatementUpdate = async () => {
+        const taskDocRef = doc(db, 'users', userDoc)
         try{
           await updateDoc(taskDocRef, {
             statement: statement,
           })
           handlePersonalClose()
+          setUpdate(update+1)
         } catch (err) {
           alert(err)
         }    
       }
 
+      const uploadFile = () => {
+        if (resume == null) console.log('No file found');
+  
+        const storageRef = ref(storage, `/resume/${user.uid}`)
+        const uploadTask = uploadBytesResumable(storageRef, resume)
+  
+        uploadTask.on('state_changed', 
+        (snapshot) => {
+          // Observe state change events such as progress, pause, and resume
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        }, 
+        (error) => {
+        }, 
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            handleUpdate(downloadURL)
+          });
+        }
+      );
+      };
+      
+      console.log(userData)
       
     return (
     <>
@@ -107,24 +156,33 @@ export const UserDetails = (props) => {
         <div style = {userStyle.innerbox}>
         <div style = {userStyle.banner}>
             <p style = {userStyle.text}>
-            <b>Name: </b> {props.name} </p> 
+            <b>Name: </b> {userData.name} </p> 
         </div>
 
-        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Email: </b> {props.email}</p></div>
+        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Email: </b> {userData.email}</p></div>
         <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Number of Orgs: </b></p></div>
         <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Number of LORs: </b> </p></div>
-        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Personal Statement: </b> {props.statement}</p></div>
+        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Personal Statement: </b> {userData.statement}</p></div>
         <Button style = {{marginLeft: 50, width: 200, backgroundColor: 'black'}} onClick={handlePersonalShow}>
             Add Personal Statement
         </Button>
 
-        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Resume: </b> {resume}</p></div>
+        <div style = {userStyle.banner}><p style = {userStyle.text}> <b>Resume: </b> 
+        {userData.resume && <a style = {{fontSize: 20}} href = {userData.resume}> Click to View</a>}
+        {!userData.resume && <p>None Provided</p>}
+        </p>
+
+        </div>
+
         <input
-        style = {{marginLeft: 50, marginBottom: 15}}
-        type = 'file'
-        onChange = {(e) => {setResume(e.target.files[0])}}
+          style = {{marginLeft: 50, marginBottom: 10}}
+          type = 'file'
+          onChange = {(e) => {setResume(e.target.files[0])}}
+          
         />
-        <Button style = {{marginLeft: 50, width: 200, backgroundColor: 'black'}}>Upload</Button>
+        
+        <Button style = {{marginLeft: 50, width: 200, backgroundColor: 'black'}}
+        onClick = {uploadFile}>Upload</Button>
         </div>
         
         <div style = {{display : 'flex', flexDirection: 'row'}}> 
@@ -152,7 +210,7 @@ export const UserDetails = (props) => {
           <Button variant="secondary" onClick={handlePersonalClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleUpdate}>
+          <Button variant="primary" onClick={handleStatementUpdate}>
             Save Changes
           </Button>
         </Modal.Footer>
