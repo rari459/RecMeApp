@@ -2,9 +2,8 @@ import { useState } from "react";
 import {NavBar} from "./components/NavBar"
 import Image from "./assets/recommendation-contract.png"
 import Dashboard from "./assets/Dashboard.png"
-import { useSpring, animated } from 'react-spring'
-import ReactCardFlip from 'react-card-flip';
-import { BallFlipCard } from "./components/BallFlipCard";
+/*import ReactCardFlip from 'react-card-flip';*/
+/*import { BallFlipCard } from "./components/BallFlipCard";*/
 
 
 const homeStyle = {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReactCardFlip from 'react-card-flip';
+/*import ReactCardFlip from 'react-card-flip';*/
 
 const ballStyle = {
     ballfront : {
@@ -33,6 +33,8 @@ export const BallFlipCard = () => {
       }
 
     return (
+        <div></div>
+        /*
         <ReactCardFlip isFlipped={isFlipped} flipDirection="vertical">
             <div 
             style = {ballStyle.ballfront}
@@ -45,6 +47,7 @@ export const BallFlipCard = () => {
             onMouseLeave={()=>{handleMouseLeave()}}>
             </div>
         </ReactCardFlip>
+        */
 
     )
 }
