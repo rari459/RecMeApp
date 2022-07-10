@@ -33,7 +33,7 @@ export const BallFlipCard = () => {
       }
 
     return (
-        <div></div>
+        <div><p></p></div>
         /*
         <ReactCardFlip isFlipped={isFlipped} flipDirection="vertical">
             <div 
