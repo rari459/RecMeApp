@@ -5,6 +5,7 @@ import { Button, Modal } from "react-bootstrap"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { FaTrashAlt } from "react-icons/fa"
 import { auth, db, storage } from "../../firebase";
+import {useNavigate} from 'react-router-dom';
 
 const savedCardStyles = {
     container : {
@@ -26,6 +27,8 @@ export const SaveCard = (props) => {
     const handleDeleteClose = () => setDeleteModal(false);
     const handleDeleteShow = () => setDeleteModal(true);
     const [user, loading, error] = useAuthState(auth);
+    const navigate = useNavigate();
+
 
 
     const deleteSaved = async (e) => {
